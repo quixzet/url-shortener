@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Страница не найдена - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="display-1 text-muted mb-4">404</div>
+    <h1 class="h2 mb-3">Страница не найдена</h1>
+    <p class="h4 text-muted fw-normal mb-4">Запрошенная страница не существует.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">
+        <i class="bi bi-house me-2"></i> На главную
+    </a>
+</div>
+{% endblock %}

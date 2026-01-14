@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактировать ссылку - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-pencil me-2"></i>Редактировать ссылку
+                </h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Короткий код:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{{ request.scheme }}://{{ request.get_host }}/</span>
+                            <input type="text" class="form-control" value="{{ url.short_code }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.original_url.id_for_label }}" class="form-label">Оригинальный URL *</label>
+                        {{ form.original_url }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">Название ссылки</label>
+                        {{ form.title }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                        {{ form.description }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.is_private.id_for_label }}" class="form-label">
+                                {{ form.is_private }} Сделать приватной
+                            </label>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">Пароль</label>
+                            {{ form.password }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'url_detail' url.short_code %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Назад
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Добавляем классы к полям формы
+    document.addEventListener('DOMContentLoaded', function() {
+        var inputs = document.querySelectorAll('input[type="text"], input[type="url"], input[type="password"]');
+        inputs.forEach(function(input) {
+            input.classList.add('form-control');
+        });
+        
+        var textareas = document.querySelectorAll('textarea');
+        textareas.forEach(function(textarea) {
+            textarea.classList.add('form-control');
+        });
+    });
+</script>
+{% endblock %}

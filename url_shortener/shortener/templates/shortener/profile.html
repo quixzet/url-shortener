@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="mb-4">
+                    <i class="bi bi-person-circle me-2"></i>Настройки профиля
+                </h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Имя пользователя</label>
+                            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <!-- Убрана секция "О себе" -->
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.website.id_for_label }}" class="form-label">Вебсайт</label>
+                        {{ form.website }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.default_link_expiry_days.id_for_label }}" class="form-label">
+                            Срок действия ссылок по умолчанию (дней)
+                        </label>
+                        {{ form.default_link_expiry_days }}
+                    </div>
+                    
+                    <!-- Убрана секция "Тема" -->
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.show_advanced_options }}
+                            <label for="{{ form.show_advanced_options.id_for_label }}" class="form-check-label">
+                                Показывать расширенные настройки при создании ссылки
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- API ключ -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">API доступ</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if user.profile.api_key %}
+                            <div class="mb-3">
+                                <label class="form-label">API ключ</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" value="{{ user.profile.api_key }}" readonly id="apiKey">
+                                    <button class="btn btn-outside-secondary" type="button" onclick="copyToClipboard('{{ user.profile.api_key }}')">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Использование API: {{ user.profile.api_usage }} запросов
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <form method="post" action="{% url 'generate_api_key' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-key me-1"></i> 
+                                    {% if user.profile.api_key %}
+                                        Сгенерировать новый ключ
+                                    {% else %}
+                                        Сгенерировать API ключ
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Назад
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Добавляем классы к полям формы
+    document.addEventListener('DOMContentLoaded', function() {
+        var inputs = document.querySelectorAll('input[type="text"], input[type="url"], input[type="number"]');
+        inputs.forEach(function(input) {
+            input.classList.add('form-control');
+        });
+        
+        var textareas = document.querySelectorAll('textarea');
+        textareas.forEach(function(textarea) {
+            textarea.classList.add('form-control');
+        });
+        
+        var selects = document.querySelectorAll('select');
+        selects.forEach(function(select) {
+            select.classList.add('form-select');
+        });
+    });
+</script>
+{% endblock %}

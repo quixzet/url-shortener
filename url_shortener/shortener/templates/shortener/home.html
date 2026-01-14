@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Герой секция -->
+        <div class="hero-section">
+            <h1 class="display-4 fw-bold">Сокращайте ссылки быстро и бесплатно</h1>
+            <p class="lead">Создавайте короткие ссылки, делитесь ими и отслеживайте статистику переходов.</p>
+        </div>
+
+        <!-- Форма сокращения ссылки -->
+        <div class="card p-4 mb-4">
+            <h3 class="mb-4">
+                <i class="bi bi-link-45deg me-2"></i>Создать короткую ссылку
+            </h3>
+            
+            <form method="post" id="shortenForm">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.original_url.id_for_label }}" class="form-label">Длинная ссылка *</label>
+                    {{ form.original_url }}
+                    {% if form.original_url.errors %}
+                    <div class="text-danger">{{ form.original_url.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.custom_code.id_for_label }}" class="form-label">Свой короткий код</label>
+                        {{ form.custom_code }}
+                        <small class="form-text text-muted">Необязательно. Только буквы и цифры.</small>
+                        {% if form.custom_code.errors %}
+                        <div class="text-danger">{{ form.custom_code.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.expiry_days.id_for_label }}" class="form-label">Срок действия</label>
+                        {{ form.expiry_days }}
+                    </div>
+                </div>
+                
+                {% if form.title %}
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">Название ссылки</label>
+                    {{ form.title }}
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-scissors me-2"></i>Сократить ссылку
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Результат -->
+        {% if shortened_url %}
+        <div class="card p-4 mb-4 url-card">
+            <h4 class="text-success mb-3">
+                <i class="bi bi-check-circle-fill me-2"></i>Ссылка успешно создана!
+            </h4>
+            
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label class="form-label">Оригинальная ссылка:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ shortened_url.original_url }}" readonly>
+                            <button class="btn btn-outline-secondary copy-btn" 
+                                    onclick="copyToClipboard('{{ shortened_url.original_url }}')"
+                                    data-bs-toggle="tooltip" title="Скопировать">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Короткая ссылка:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ full_short_url }}" readonly id="shortUrlInput">
+                            <button class="btn btn-primary copy-btn" 
+                                    onclick="copyToClipboard('{{ full_short_url }}')"
+                                    data-bs-toggle="tooltip" title="Скопировать">
+                                <i class="bi bi-clipboard-check"></i> Копировать
+                            </button>
+                            <a href="{{ full_short_url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Код ссылки:</label>
+                        <span class="badge-url">{{ shortened_url.short_code }}</span>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 text-center">
+                    {% if shortened_url.qr_code %}
+                    <div class="mb-3">
+                        <img src="{{ shortened_url.qr_code.url }}" alt="QR Code" class="qr-code img-fluid">
+                        <p class="small mt-2">QR-код для быстрого доступа</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="{% url 'url_detail' shortened_url.short_code %}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-bar-chart me-1"></i> Статистика
+                </a>
+                <button onclick="shareLink('{{ full_short_url }}')" class="btn btn-outline-secondary">
+                    <i class="bi bi-share me-1"></i> Поделиться
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Последние публичные ссылки -->
+        {% if public_urls %}
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-clock-history me-2"></i>Недавно созданные ссылки
+            </h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Короткая ссылка</th>
+                            <th>Клики</th>
+                            <th>Создано</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for url in public_urls %}
+                        <tr>
+                            <td>
+                                <a href="{{ url.get_short_url }}" target="_blank" class="text-decoration-none">
+                                    /{{ url.short_code }}
+                                </a>
+                                {% if url.title %}
+                                <br><small class="text-muted">{{ url.title|truncatechars:30 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary rounded-pill">{{ url.click_count }}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ url.created_at|timesince }} назад</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Функция для поделиться
+    function shareLink(url) {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Моя короткая ссылка',
+                text: 'Посмотрите мою короткую ссылку',
+                url: url
+            });
+        } else {
+            copyToClipboard(url);
+            showToast('Ссылка скопирована в буфер обмена!', 'success');
+        }
+    }
+    
+    // Автоматический выбор текста в поле короткой ссылки
+    document.addEventListener('DOMContentLoaded', function() {
+        const shortUrlInput = document.getElementById('shortUrlInput');
+        if (shortUrlInput) {
+            shortUrlInput.addEventListener('click', function() {
+                this.select();
+            });
+        }
+    });
+</script>
+{% endblock %}

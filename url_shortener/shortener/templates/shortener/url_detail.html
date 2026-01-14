@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Статистика: {{ url.short_code }} - URL Shortener{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Заголовок и кнопки действий -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>Статистика ссылки
+                </h1>
+                <p class="text-muted mb-0">
+                    /{{ url.short_code }}
+                    {% if url.title %} - {{ url.title }}{% endif %}
+                </p>
+            </div>
+            <div class="btn-group">
+                <a href="/{{ url.short_code }}" target="_blank" class="btn btn-outline-primary">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Перейти
+                </a>
+                <a href="{% url 'edit_url' url.short_code %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil me-1"></i> Редактировать
+                </a>
+                <button onclick="copyToClipboard('{{ request.build_absolute_uri }}/{{ url.short_code }}')" 
+                        class="btn btn-outline-success">
+                    <i class="bi bi-clipboard me-1"></i> Копировать
+                </button>
+            </div>
+        </div>
+
+        <!-- Информация о ссылке -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th width="40%">Оригинальный URL:</th>
+                                <td>
+                                    <a href="{{ url.original_url }}" target="_blank" class="text-truncate d-inline-block" style="max-width: 300px;">
+                                        {{ url.original_url }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Короткий URL:</th>
+                                <td>
+                                    <code>{{ request.scheme }}://{{ request.get_host }}/{{ url.short_code }}</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Всего кликов:</th>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill fs-6">{{ url.click_count }}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th width="40%">Создана:</th>
+                                <td>{{ url.created_at|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Последний клик:</th>
+                                <td>
+                                    {% if url.last_clicked %}
+                                        {{ url.last_clicked|date:"d.m.Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Нет данных</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Статус:</th>
+                                <td>
+                                    {% if url.is_expired %}
+                                        <span class="badge bg-danger">Истекла</span>
+                                    {% elif not url.is_active %}
+                                        <span class="badge bg-secondary">Неактивна</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Активна</span>
+                                        {% if url.days_left %}
+                                            ({{ url.days_left }} дней осталось)
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние клики -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Последние клики</h5>
+                <span class="badge bg-primary">{{ recent_clicks|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if recent_clicks %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>IP адрес</th>
+                                <th>Устройство</th>
+                                <th>Браузер</th>
+                                <th>Страна</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for click in recent_clicks %}
+                            <tr>
+                                <td>
+                                    <small>{{ click.clicked_at|date:"d.m.Y H:i" }}</small>
+                                </td>
+                                <td>
+                                    <code class="small">{{ click.ip_address|default:"Неизвестно" }}</code>
+                                </td>
+                                <td>
+                                    {% if click.device_type == 'mobile' %}
+                                        <i class="bi bi-phone text-primary"></i>
+                                    {% elif click.device_type == 'desktop' %}
+                                        <i class="bi bi-pc text-success"></i>
+                                    {% elif click.device_type == 'tablet' %}
+                                        <i class="bi bi-tablet text-warning"></i>
+                                    {% else %}
+                                        <i class="bi bi-question-circle text-secondary"></i>
+                                    {% endif %}
+                                    {{ click.get_device_type_display }}
+                                </td>
+                                <td>
+                                    {% if click.browser == 'chrome' %}
+                                        <span class="badge bg-success">Chrome</span>
+                                    {% elif click.browser == 'firefox' %}
+                                        <span class="badge bg-warning">Firefox</span>
+                                    {% elif click.browser == 'safari' %}
+                                        <span class="badge bg-primary">Safari</span>
+                                    {% elif click.browser == 'edge' %}
+                                        <span class="badge bg-info">Edge</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Другой</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if click.country %}
+                                        {{ click.country }}
+                                    {% else %}
+                                        <span class="text-muted">Неизвестно</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-mouse display-4"></i>
+                    <p class="mt-2">Пока нет данных о кликах</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
