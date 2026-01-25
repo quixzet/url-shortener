@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: url-shortener
+    env: python
+    plan: free
+    region: frankfurt  # или oregon, ohio, singapore
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn url_shortener.wsgi:application
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: WEB_CONCURRENCY
+        value: 4
